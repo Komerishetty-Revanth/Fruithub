@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sign up | FruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="auth">
+    <div class="glow"></div>
+    <span class="floaty a" aria-hidden="true">🍎</span>
+    <span class="floaty b" aria-hidden="true">🍇</span>
+    <section class="auth-card">
+      <h1 class="d">Create your account</h1>
+      <p class="lead">Fresh fruit within 5 km, at your door.</p>
+      <form id="register-form" novalidate>
+        <label class="field"><span>Full name</span>
+          <input type="text" name="full_name" autocomplete="name" required>
+        </label>
+        <label class="field"><span>Email</span>
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label class="field"><span>Phone (optional)</span>
+          <input type="tel" name="phone" autocomplete="tel">
+        </label>
+        <label class="field"><span>Password (at least 8 characters)</span>
+          <input type="password" name="password" autocomplete="new-password" required>
+        </label>
+        <div class="form-error" id="form-error" role="alert"></div>
+        <button class="btn solid" type="submit" id="submit-btn">Create account</button>
+      </form>
+      <p class="alt">Already have an account? <a href="login.html">Log in</a></p>
+    </section>
+  </main>
+  <script type="module" src="../js/pages/register.js"></script>
+</body>
+</html>
