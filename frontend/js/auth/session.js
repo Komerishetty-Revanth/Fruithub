@@ -16,3 +16,9 @@ export const getToken = () => read()?.token || null;
 export const getUser = () => read()?.user || null;
 export const isLoggedIn = () => !!getToken();
 export const clearSession = () => localStorage.removeItem(KEY);
+
+// Keep the token, replace the saved user (for example after the phone is verified)
+export function updateUser(user) {
+  const token = getToken();
+  if (token) saveSession(token, user);
+}

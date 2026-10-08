@@ -24,8 +24,12 @@ form.addEventListener("submit", async (e) => {
   try {
     const data = await login(email, password);
     saveSession(data.access_token, data.user);
-    // Owners and admins get their own dashboards in a later step.
-    location.href = "../index.html";
+    // Customers must verify their mobile number. Owners and admins get dashboards later.
+    if (data.user.role === "CUSTOMER" && !data.user.phone_verified) {
+      location.href = "verify-phone.html";
+    } else {
+      location.href = "../index.html";
+    }
   } catch (err) {
     errorEl.textContent = err.message;
     btn.disabled = false;

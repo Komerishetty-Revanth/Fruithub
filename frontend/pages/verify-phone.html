@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Verify mobile | FruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="auth">
+    <div class="glow"></div>
+    <span class="floaty a" aria-hidden="true">📱</span>
+    <span class="floaty b" aria-hidden="true">🍊</span>
+    <section class="auth-card">
+      <h1 class="d">Verify your mobile</h1>
+      <p class="lead" id="lead">We sent a 6-digit code.</p>
+      <div class="dev-box" id="dev-box" hidden></div>
+      <form id="otp-form" novalidate>
+        <label class="field"><span>Enter the code</span>
+          <input class="otp-input" type="text" name="code" inputmode="numeric" maxlength="6"
+                 autocomplete="one-time-code" placeholder="••••••" required>
+        </label>
+        <div class="form-error" id="form-error" role="alert"></div>
+        <button class="btn solid" type="submit" id="submit-btn">Verify</button>
+      </form>
+      <p class="alt">Did not get it? <button class="link-btn" id="resend-btn" type="button" disabled>Resend code</button></p>
+    </section>
+  </main>
+  <script type="module" src="../js/pages/verify.js"></script>
+</body>
+</html>

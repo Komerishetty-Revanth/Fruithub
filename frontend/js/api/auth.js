@@ -6,8 +6,10 @@ export const login = (email, password) =>
 export const register = ({ full_name, email, phone, password }) =>
   request("/auth/register", {
     method: "POST",
-    body: { full_name, email, phone: phone || null, password },
+    body: { full_name, email, phone, password },
     auth: false,
   });
 
 export const me = () => request("/auth/me");
+export const sendOtp = () => request("/auth/phone/send", { method: "POST" });
+export const verifyOtp = (code) => request("/auth/phone/verify", { method: "POST", body: { code } });
