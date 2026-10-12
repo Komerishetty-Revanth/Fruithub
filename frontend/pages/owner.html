@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Owner panel | FruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/shop.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="page">
+    <h1 class="page-title d">Owner panel</h1>
+    <p class="page-sub">Set where customers should send direct UPI product payments and review submitted payment references.</p>
+    <section class="checkout-box">
+      <h2>Store UPI ID</h2>
+      <p>Enter the UPI ID linked to the account where product payments should be credited.</p>
+      <form id="upi-settings-form" class="address-form">
+        <label class="field"><span>UPI ID / VPA</span>
+          <input name="upi_vpa" maxlength="128" pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,63}@[A-Za-z0-9][A-Za-z0-9.-]{0,63}" placeholder="name@bank" required>
+        </label>
+        <button class="btn solid" type="submit">Save UPI ID</button>
+      </form>
+      <p id="owner-message" class="text" role="status"></p>
+    </section>
+    <section class="owner-payments">
+      <h2>UPI payments to verify</h2>
+      <p class="text">Compare each reference and amount with your UPI/bank account. Confirm only after the money is actually credited.</p>
+      <div id="manual-payments"><p class="empty">Loading payment references…</p></div>
+    </section>
+  </main>
+  <script type="module" src="../js/pages/owner.js"></script>
+</body>
+</html>

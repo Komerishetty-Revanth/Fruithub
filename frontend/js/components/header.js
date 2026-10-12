@@ -12,6 +12,13 @@ export function renderHeader(root = "") {
       <a class="brand d" href="${root}index.html">FruitHub</a>
       <nav class="nav">
         <a href="${root}index.html">Home</a>
+        <a href="${root}pages/products.html?type=FRUIT">Fruits</a>
+        <a href="${root}pages/products.html?type=JUICE">Juices</a>
+        <a href="${root}pages/products.html?type=DRY_FRUIT">Dry fruits</a>
+        <a href="${root}pages/cart.html">Cart</a>
+        <a href="${root}pages/orders.html">Orders</a>
+        ${user?.role === "OWNER" ? `<a href="${root}pages/owner.html">Owner panel</a>` : ""}
+        <a href="${root}pages/offers.html">Offers</a>
       </nav>
       <div class="acct">
         ${

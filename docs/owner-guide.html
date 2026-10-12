@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FruitHub owner handbook</title>
+  <style>
+    :root { font: 15px/1.65 "Segoe UI", Arial, sans-serif; color: #202820; background: #edf2ee; }
+    * { box-sizing: border-box; }
+    body { max-width: 980px; margin: 28px auto; padding: 0 20px 40px; }
+    header { background: #183b2b; color: white; padding: 30px 36px; border-radius: 16px; }
+    header h1 { margin: 0 0 7px; }
+    header p { margin: 0; color: #d7e6dc; }
+    main { background: white; padding: 28px 36px; border-radius: 16px; margin-top: 16px; }
+    h2 { color: #1b5b3c; font-size: 21px; border-bottom: 1px solid #dce6df; padding-bottom: 5px; margin-top: 28px; }
+    h3 { margin: 18px 0 5px; font-size: 17px; }
+    li { margin: 5px 0; }
+    code, pre { font-family: Consolas, "Courier New", monospace; }
+    code { background: #edf2ee; padding: 1px 4px; overflow-wrap: anywhere; }
+    pre { color: #f3f5f3; background: #17211b; white-space: pre-wrap; overflow-wrap: anywhere; padding: 13px 16px; border-radius: 9px; font-size: 12px; }
+    .notice { border-left: 4px solid #cb8121; background: #fff6e7; padding: 12px 15px; margin: 16px 0; }
+    .good { border-color: #27804f; background: #edf8f0; }
+    a { color: #17663e; }
+    @media print { :root { background: white; font-size: 11pt; } body { margin: 0; padding: 0; } header, main { border-radius: 0; margin: 0; padding: 18px 28px; } pre, .notice { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <header><h1>FruitHub Owner Handbook</h1><p>How owner access, products, stock, visual previews, UPI, and order handling work in the current project.</p></header>
+  <main>
+    <p><a href="index.html">← Documentation home</a> · <a href="security.html">Security guide</a> · <a href="payments.html">Payment safety</a></p>
+    <div class="notice"><strong>Owner control:</strong> the owner controls their store profile, product data, inventory, product-photo previews, configured UPI ID, submitted-payment decisions, and the allowed order-status steps. Admin-only controls such as creating owners and approving stores are not owner controls.</div>
+
+    <h2>1. What is in the current Owner panel</h2>
+    <p>Open <code>frontend/pages/owner.html</code> (the header shows <strong>Owner panel</strong> for an owner account). Currently this screen lets an owner:</p>
+    <ul>
+      <li>Set or update the store UPI ID used for customer direct payments.</li>
+      <li>See customer-submitted UPI references for that owner’s store.</li>
+      <li>Confirm money received or reject a reference. Confirmation should happen only after checking the actual UPI/bank account.</li>
+    </ul>
+    <div class="notice">The current frontend does not provide a complete visual product-management dashboard for adding/editing products, managing all inventory, or handling every order. These operations exist as owner-protected API endpoints. Use the interactive API page at <code>http://127.0.0.1:8000/docs</code> while the backend is running, or build a dashboard UI for those actions. Do not expect a hidden product dashboard button that is not in the current code.</div>
+
+    <h2>2. Who is allowed to be an owner</h2>
+    <ul>
+      <li>Public registration creates customer accounts, not owner accounts.</li>
+      <li>An admin must create/provision the owner account and make sure the store is approved and active.</li>
+      <li>Owner endpoints require a signed-in account with the OWNER role. Product, order, image, and payment operations are scoped to that owner’s store.</li>
+      <li>If you are a store owner but do not have an owner login, ask the FruitHub administrator to provision it. Do not edit database roles manually.</li>
+    </ul>
+
+    <h2>3. Add a product using the API page</h2>
+    <ol>
+      <li>Start the backend and open <code>http://127.0.0.1:8000/docs</code>.</li>
+      <li>Use <code>POST /api/v1/auth/login</code> with the owner’s own email/password. Copy the returned <code>access_token</code> privately.</li>
+      <li>Click <strong>Authorize</strong> in Swagger and enter <code>Bearer YOUR_ACCESS_TOKEN</code>. Never paste the token into a public chat, document, screenshot, or issue.</li>
+      <li>Use <code>GET /api/v1/categories</code> to find the category ID and category product type (FRUIT, JUICE, or DRY_FRUIT).</li>
+      <li>Use <code>POST /api/v1/owner/products</code> with an example like this. Replace the placeholder category ID with a real category UUID and adjust information to the actual item:</li>
+    </ol>
+    <pre>{
+  "name": "Fresh Orange Juice",
+  "description": "Freshly prepared orange juice",
+  "ingredients": "Orange",
+  "allergens": null,
+  "is_veg": true,
+  "shelf_life_days": 1,
+  "storage_note": "Keep refrigerated",
+  "sugar_info": "No added sugar",
+  "is_made_to_order": true,
+  "category_id": "REPLACE-WITH-ACTUAL-CATEGORY-UUID",
+  "price": 120,
+  "discount_price": null,
+  "unit": "bottle",
+  "stock_quantity": 10,
+  "is_available": true
+}</pre>
+    <p>Accepted units include <code>kg</code>, <code>g</code>, <code>piece</code>, <code>dozen</code>, <code>ml</code>, <code>l</code>, <code>bottle</code>, and <code>pack</code>. Whole-number units such as bottle/pack/piece require whole quantities. A discount price cannot exceed the regular price. Required food details depend on the product category and application validation.</p>
+
+    <h2>4. Edit a product, update stock, or hide it</h2>
+    <ul>
+      <li><code>GET /api/v1/owner/products</code>: list the current owner’s products and copy the product ID.</li>
+      <li><code>PATCH /api/v1/owner/products/{product_id}</code>: change only the fields sent, such as name, description, category, price, discount, unit, or availability. Stock is deliberately changed through the stock endpoint.</li>
+      <li><code>POST /api/v1/owner/products/{product_id}/stock</code>: add or remove quantity and provide a reason/note. The app records inventory history and prevents stock going below zero.</li>
+      <li><code>POST /api/v1/owner/products/{product_id}/deactivate</code>: hide/deactivate a listing.</li>
+      <li><code>POST /api/v1/owner/products/{product_id}/activate</code>: reactivate it.</li>
+      <li><code>GET /api/v1/owner/inventory</code>: review stock-change history.</li>
+    </ul>
+    <p>Use the endpoint’s <strong>Try it out</strong> panel in Swagger; it supplies path, body, and response examples. A missing ID or another store’s product should fail rather than granting access.</p>
+
+    <h2>5. Upload and control a product animation</h2>
+    <ol>
+      <li>Open the product’s public detail page while signed in as its owner.</li>
+      <li>In <strong>Animated product view</strong>, choose <strong>Upload photo and regenerate</strong>. Use a clear JPG, PNG, or WEBP product image at least 300 pixels on each side and no more than 8000 pixels on a side. The configured upload limit is 5 MB.</li>
+      <li>Image processing runs in the background. The image/preview may take a moment. Refresh the product detail page when processing is finished.</li>
+      <li><strong>Regenerate preview</strong> reprocesses the product’s current primary photo.</li>
+      <li><strong>Remove preview</strong> disables the generated preview. The product still has its product image; removing the animation is not the same as deleting the product.</li>
+      <li>After generation, customers see the animated WebP preview in product cards/cart where used. Product detail loads an interactive photo-depth effect. Without a generated preview, still product photos are used.</li>
+    </ol>
+    <p>The generated product visual is created from a cutout and depth map. It is not a true scanned or fully modelled 3D object. The product page lets the customer drag to tilt the depth effect and zoom; the cart animation is a small visual preview only. The home page also contains separate built-in Three.js product-type decorations.</p>
+
+    <h2>6. Owner settings and UPI ID</h2>
+    <ol>
+      <li>Open Owner panel and enter the actual VPA/UPI ID controlled by the store.</li>
+      <li>Save the setting. Owner can update it later from the same panel.</li>
+      <li>Without a saved UPI ID, customers cannot create a manual-UPI checkout for that store.</li>
+      <li>The UPI ID must be correct: checkout creates a standard link for customers’ installed UPI applications and shows the payee/amount for confirmation.</li>
+    </ol>
+    <p>Store location and delivery radius are administered separately and are not owner-editable through these store settings. The backend does not transfer money itself.</p>
+
+    <h2>7. Verify, reject, and manage orders</h2>
+    <ol>
+      <li>Owner panel shows references submitted for pending UPI payments belonging to this store.</li>
+      <li>Before confirming, open the store’s trusted banking/UPI app independently and verify the actual credit and amount. A typed reference or screenshot is not verification.</li>
+      <li>Confirm marks payment paid and makes the order available in the owner order list.</li>
+      <li>Rejecting marks the payment failed, cancels that pending order, and restores stock. If money was actually credited, the owner must resolve/refund it outside FruitHub rather than assuming rejection refunds automatically.</li>
+      <li>Owner can advance paid orders through permitted steps using <code>POST /api/v1/owner/orders/{order_id}/status</code>. Use <code>GET /api/v1/owner/orders</code> and its status filters in Swagger to inspect orders.</li>
+      <li>For customer addresses outside the store’s delivery radius, the owner cannot mark the order “out for delivery.” The customer arranges and pays for external delivery separately and confirms receipt after ready.</li>
+    </ol>
+    <div class="notice good">Submitted UPI references reserve stock for a limited review period (up to 24 hours). If not resolved before expiry, the order is cancelled and the stock released. Tell the customer to contact the store promptly if a real transfer is delayed or pending.</div>
+
+    <h2>8. Offer and category APIs</h2>
+    <ul>
+      <li><code>GET /api/v1/owner/offers</code>, <code>POST /api/v1/owner/offers</code>, and corresponding PATCH/activate/deactivate routes support store offers.</li>
+      <li><code>POST /api/v1/owner/categories</code> creates a category where permitted. Product-type/category governance and store approval can involve admin-controlled operations.</li>
+      <li>See API schemas directly in Swagger at <code>/docs</code> for exact request fields.</li>
+    </ul>
+
+    <h2>9. Owner safety checklist</h2>
+    <ul>
+      <li>Keep the owner password and bearer token private. Sign out on shared devices.</li>
+      <li>Use accurate prices, stock, ingredients/allergens, expiry, and storage details.</li>
+      <li>Use product photos you are permitted to publish and do not upload private customer documents.</li>
+      <li>Verify every direct UPI payment in your account. Never request PINs, OTPs, or passwords from customers.</li>
+      <li>Do not promise automatic refunds. Direct UPI refunds are outside the application.</li>
+      <li>Contact the admin for owner-account, approval, delivery-radius, or store-location changes.</li>
+    </ul>
+    <p>Related reading: <a href="payments.html">Payments &amp; UPI safety</a>, <a href="security.html">Security guide</a>, and <a href="FruitHub-Local-Test-Guide.html">Local setup and test guide</a>.</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FruitHub project guides</title>
+  <style>
+    :root { font: 16px/1.6 "Segoe UI", Arial, sans-serif; color: #1d2922; background: #edf2ee; }
+    * { box-sizing: border-box; }
+    body { max-width: 900px; margin: 36px auto; padding: 0 20px; }
+    header { background: #183b2b; color: white; padding: 32px; border-radius: 18px; }
+    h1 { margin: 0; line-height: 1.2; }
+    header p { color: #d7e6dc; margin-bottom: 0; }
+    main { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 18px; }
+    a.card { display: block; background: white; color: inherit; border-radius: 14px; padding: 22px; text-decoration: none; border: 1px solid #dce6df; }
+    a.card:hover { border-color: #25804f; transform: translateY(-2px); }
+    h2 { color: #1b5b3c; font-size: 20px; margin: 0 0 8px; }
+    footer { color: #5d6a61; font-size: 13px; margin: 20px 4px; }
+    @media print { :root { background: white; } body { margin: 0; } header, a.card { border-radius: 0; } a.card { border: 1px solid #aaa; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FruitHub project guides</h1>
+    <p>Plain-language documentation for customers, owners, local testing, security, UPI payments, and product animations.</p>
+  </header>
+  <main>
+    <a class="card" href="security.html"><h2>Security guide</h2><p>What protections the code provides, what they do, and what must be configured before deployment.</p></a>
+    <a class="card" href="payments.html"><h2>Payments &amp; UPI safety</h2><p>Customer UPI checkout, manual owner verification, expiry, refunds, and test guidance.</p></a>
+    <a class="card" href="owner-guide.html"><h2>Owner handbook</h2><p>Owner access, products, stock, animations, UPI setup, payment review, orders, and current UI/API limits.</p></a>
+    <a class="card" href="FruitHub-Local-Test-Guide.html"><h2>Local test guide</h2><p>PowerShell commands, database precautions, and a complete owner/customer test walkthrough.</p></a>
+    <a class="card" href="FruitHub-Local-Test-Guide.pdf"><h2>Printable test guide (PDF)</h2><p>Download the current printable local setup and test steps.</p></a>
+  </main>
+  <footer>These guides describe the current project code. Recheck configuration and deployment settings before using the app with real customers.</footer>
+</body>
+</html>

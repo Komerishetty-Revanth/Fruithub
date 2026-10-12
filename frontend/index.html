@@ -3,18 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>FruitHub: Fresh. Local. Within 5 KM.</title>
+  <title>FruitHub: Fresh. Local</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/home.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="intro" aria-hidden="true">
     <div class="drops"></div>
     <div class="logo d"></div>
-    <p class="intro-sub">Fresh. Local. Within 5 km.</p>
+    <p class="intro-sub">Fresh Local</p>
     <button class="skip" type="button">Skip</button>
   </div>
 
@@ -22,18 +30,25 @@
 
   <main class="hero">
     <div class="glow"></div>
+    <canvas id="hero-canvas" aria-hidden="true"></canvas>
+    <div id="hero-fallback" class="hero-fallback" hidden aria-hidden="true">
+      <span style="--i:0">🥭</span><span style="--i:1">🧃</span><span style="--i:2">🍎</span>
+      <span style="--i:3">🥜</span><span style="--i:4">🍊</span><span style="--i:5">🍇</span>
+    </div>
     <div class="hero-inner">
       <h1 class="d">
-        <span class="line"><b style="--i:0">FRESH.</b></span>
-        <span class="line"><b style="--i:1">LOCAL.</b></span>
-        <span class="line"><b style="--i:2">WITHIN 5 KM.</b></span>
+        <span class="line"><b style="--i:0">FRESH</b></span>
+        <span class="line"><b style="--i:1">LOCAL</b></span>
+        
       </h1>
-      <p>Fresh fruits delivered to your doorstep.</p>
+      <p>Fresh fruits, juices, and dry fruits from local sellers. Delivery availability depends on your address.</p>
       <div class="actions">
-        <a class="btn solid" href="#">Explore fruits</a>
-        <a class="btn" href="#">View offers</a>
+        <a class="btn solid" href="pages/products.html?type=FRUIT">Explore fruits</a>
+        <a class="btn" href="pages/products.html?type=JUICE">Shop juices</a>
+        <a class="btn" href="pages/products.html?type=DRY_FRUIT">Shop dry fruits</a>
+        <a class="btn" href="pages/offers.html">View offers</a>
       </div>
-      <p class="note">The 3D fruit scene arrives in the next step.</p>
+      <p class="note">Move your mouse or finger over the scene.</p>
     </div>
   </main>
 

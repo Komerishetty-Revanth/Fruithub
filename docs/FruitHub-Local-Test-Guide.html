@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FruitHub local setup and testing guide</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #19221d;
+      background: #eef2ee;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    * { box-sizing: border-box; }
+    body { max-width: 920px; margin: 28px auto; padding: 0 22px 42px; }
+    header { background: #183b2b; color: white; padding: 34px 38px; border-radius: 18px; }
+    header h1 { font-size: 30px; margin: 0 0 8px; line-height: 1.15; }
+    header p { margin: 0; color: #d7e6dc; }
+    main { background: white; padding: 30px 38px; border-radius: 18px; margin-top: 18px; }
+    h2 { color: #1b5b3c; font-size: 21px; margin: 30px 0 8px; border-bottom: 1px solid #dce6df; padding-bottom: 5px; }
+    h3 { font-size: 16px; margin: 20px 0 6px; }
+    p { margin: 8px 0; }
+    ol, ul { padding-left: 24px; }
+    li { margin: 5px 0; }
+    code, pre { font-family: Consolas, "Courier New", monospace; }
+    code { background: #edf2ee; padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+    pre { background: #17211b; color: #f2f5f2; padding: 13px 16px; border-radius: 9px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+    .notice { border-left: 4px solid #cb8121; background: #fff6e7; padding: 12px 15px; margin: 15px 0; }
+    .safe { border-left-color: #27804f; background: #edf8f0; }
+    .danger { border-left-color: #bd3e35; background: #fff0ed; }
+    .check { list-style: none; padding-left: 0; }
+    .check li::before { content: "☐ "; font-weight: bold; }
+    .page-break { break-before: page; }
+    a { color: #17663e; }
+    footer { text-align: center; color: #64736a; font-size: 12px; padding: 14px; }
+    @media print {
+      :root { background: white; font-size: 11pt; }
+      body { max-width: none; margin: 0; padding: 0; }
+      header, main { border-radius: 0; margin: 0; }
+      header { padding: 24px 30px; }
+      main { padding: 14px 30px; }
+      h2 { break-after: avoid; }
+      pre, .notice { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+      footer { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FruitHub: Local Setup &amp; Complete Test Guide</h1>
+    <p>Plain-language steps for running the app, checking animations, testing owner/customer orders, and understanding UPI payment verification.</p>
+  </header>
+  <main>
+    <p><a href="index.html">Documentation home</a> · <a href="security.html">Security</a> · <a href="payments.html">Payment safety</a> · <a href="owner-guide.html">Owner handbook</a></p>
+    <div class="notice danger">
+      <strong>Important:</strong> Do not run database migrations against a production or important database without confirming the target and taking a backup. The current checkout uses direct UPI and manual owner verification; it does not automatically confirm real transfers or process refunds.
+    </div>
+
+    <h2>1. What you will test</h2>
+    <ul>
+      <li>Backend API and storefront running locally.</li>
+      <li>Owner UPI settings, products, stock, and animated product preview.</li>
+      <li>Customer location and delivery-area acknowledgment.</li>
+      <li>Booking, UPI app handoff, transaction-reference submission, and owner verification.</li>
+      <li>Order status and customer receipt confirmation for customer-arranged delivery.</li>
+    </ul>
+
+    <h2>2. Start the backend</h2>
+    <p>Open a new PowerShell terminal in VS Code and run:</p>
+    <pre>Set-Location 'C:\Users\HP\OneDrive\Attachments\app\fruithub\backend'
+..\..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000</pre>
+    <p>Keep this terminal open. A working API should respond at <code>http://127.0.0.1:8000/api/v1/health</code>. Interactive API documentation is at <code>http://127.0.0.1:8000/docs</code>.</p>
+    <p>If the command reports missing packages, install from the repository requirements file only if that environment is the one you intend to use:</p>
+    <pre>Set-Location 'C:\Users\HP\OneDrive\Attachments\app'
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt</pre>
+
+    <h2>3. Database check and migration</h2>
+    <p>The current latest Alembic revision is <code>4f82b6a3c1d0</code>. Its parent is <code>d7b4c6a9e215</code>. Check the actual database revision before upgrading.</p>
+    <ol>
+      <li>Confirm the database name/host configured for the backend by checking <code>backend\.env</code> locally. Do not paste or share the file because it contains credentials.</li>
+      <li>In pgAdmin, connect to that exact database and use <strong>right-click database → Backup</strong>. Save a custom-format backup somewhere safe. Do not back up the test database in place of your real intended database, or vice versa.</li>
+      <li>Run the read-only revision checks:</li>
+    </ol>
+    <pre>Set-Location 'C:\Users\HP\OneDrive\Attachments\app\fruithub\backend'
+..\..\.venv\Scripts\python.exe -m alembic current
+..\..\.venv\Scripts\python.exe -m alembic heads</pre>
+    <p>Expected head: <code>4f82b6a3c1d0</code>. If the current revision is <code>d7b4c6a9e215</code>, and you have confirmed the target database and backup, apply the migration:</p>
+    <pre>..\..\.venv\Scripts\python.exe -m alembic upgrade head</pre>
+    <p>Then verify with <code>..\..\.venv\Scripts\python.exe -m alembic current</code>. If the current revision is unknown, behind the expected parent, or the database target is unclear, stop and ask for help rather than upgrading.</p>
+    <div class="notice safe">
+      <strong>pgAdmin:</strong> use it to confirm the database and make/restore backups. Do not manually create the UPI column or alter the payment enum; Alembic handles those schema changes.
+    </div>
+
+    <h2>4. Start the frontend</h2>
+    <ol>
+      <li>In VS Code, open <code>frontend\index.html</code>.</li>
+      <li>Use the VS Code Live Server extension’s <strong>Open with Live Server</strong> action. If asked, use port <code>5500</code>.</li>
+      <li>Open the URL Live Server displays. It should end in <code>/frontend/index.html</code>.</li>
+    </ol>
+    <p>The frontend API configuration currently points to <code>http://127.0.0.1:8000/api/v1</code>. The backend CORS configuration must allow the exact Live Server origin, usually <code>http://127.0.0.1:5500</code> or <code>http://localhost:5500</code>.</p>
+
+    <div class="page-break"></div>
+    <h2>5. Prepare owner, store, and products</h2>
+    <ol>
+      <li>Log in using an owner account whose store is active and admin-approved. Use the existing account details for your own local/test setup; this guide does not assume or provide passwords.</li>
+      <li>Open <code>frontend/pages/owner.html</code> (Owner panel in the site navigation) and save the owner’s correct UPI ID, also called a VPA. Do not enter a UPI ID unless the owner controls it.</li>
+      <li>Create or verify at least one available product. Check its name, category, price, quantity/unit, image, and stock.</li>
+      <li>For animation testing, open the product detail page while logged in as the owner. Upload a clear product photo or regenerate the preview. Wait for processing to finish, refresh, and confirm the preview appears.</li>
+    </ol>
+    <div class="notice">
+      If checkout reports that the store has not configured UPI, the owner UPI ID was not saved for the store that owns the cart’s product. Confirm you logged in to the right owner and that the store is approved and active.
+    </div>
+
+    <h2>6. How the animation appears</h2>
+    <ul>
+      <li><strong>Home page:</strong> Three.js shows FruitHub’s built-in decorative product-type models.</li>
+      <li><strong>Product page:</strong> the owner-generated preview is based on the uploaded photo and depth map. Drag to tilt the depth effect; zoom with scroll/pinch or viewer buttons.</li>
+      <li><strong>Cart/booking page:</strong> the product’s generated animated WebP is shown when available; without one, the cart shows the still product image.</li>
+    </ul>
+    <p>The owner can upload/replace the photo, regenerate the preview, or remove the preview on the product detail page. Removing it makes the cart use the normal photo. The product page’s interactive view is a moving depth effect from a photo, not a fully modelled 3D object. The animation is only a visual preview; it does not alter booking, stock, delivery, or payment.</p>
+    <p>For a readable end-to-end animation check: add one product with a generated preview and one product without a preview to the cart. Confirm the first animates, the second shows its still photo, and opening the product name takes you to the detail page.</p>
+
+    <h2>7. Customer booking and location test</h2>
+    <ol>
+      <li>Log out of the owner account and log in with a customer account. Customer accounts must have phone verification completed to check out.</li>
+      <li>Open Fruits, Juices, or Dry fruits; choose an available product and add it to the cart.</li>
+      <li>Select a saved complete address. The app checks its distance from the store and tells you whether seller delivery is available.</li>
+      <li>For an address outside the store delivery area, tick the acknowledgment that you will arrange and pay for delivery separately. FruitHub charges no external delivery fee.</li>
+      <li>Check the total before placing the order: product total, discounts, and any seller delivery fee are shown. An outside delivery charge is not included.</li>
+      <li>If creating a test address, enter valid latitude and longitude. Do not use a fabricated address for a real order.</li>
+    </ol>
+
+    <h2>8. UPI payment and owner verification</h2>
+    <ol>
+      <li>Place the order. The checkout displays the payee/store, UPI ID, amount, and an <code>upi://pay</code> link.</li>
+      <li>On a phone, tap <strong>Open a UPI app</strong>. Your device may offer PhonePe, Google Pay, Paytm, or another installed app that supports the standard UPI link. The exact app chooser depends on the phone and installed apps.</li>
+      <li>If no app opens, copy the UPI ID and payee/amount, then open the UPI app yourself and pay manually. Verify the payee and amount in the app before authorizing.</li>
+      <li>Return to FruitHub → <strong>My orders</strong>. A pending order can reopen its payment link. Submit the transaction reference/UTR from your UPI app.</li>
+      <li>Submitting a reference is only a claim. The order remains unpaid. The owner must compare the payment in their own UPI/bank account and then choose <strong>Confirm money received</strong> in the Owner panel.</li>
+      <li>If the owner rejects a reference, the order is cancelled and stock restored. If a reference remains unverified, its stock reservation expires after 24 hours.</li>
+    </ol>
+    <div class="notice danger">
+      The app does not receive a payment confirmation from PhonePe, Google Pay, or Paytm. Never mark a real order paid based only on a screenshot or customer-entered reference. Direct UPI refunds are also handled by the owner outside FruitHub.
+    </div>
+    <p>A real UPI transfer sends real money. For a first test, prefer a test VPA/account or coordinate with the owner and use a small amount they both agree to. Do not submit a fake reference to a real store.</p>
+
+    <div class="page-break"></div>
+    <h2>9. Owner order and delivery checks</h2>
+    <ul class="check">
+      <li>Owner sees only their own store’s submitted payment references.</li>
+      <li>Owner verifies the amount/reference in their account before confirming.</li>
+      <li>Confirmed payment changes the order to paid/placed and makes it available in the owner order flow.</li>
+      <li>Owner advances the order through allowed status steps, one at a time.</li>
+      <li>For an outside-area order, owner cannot mark seller delivery as dispatched.</li>
+      <li>Customer arranges outside delivery separately and confirms receipt after the order is ready.</li>
+      <li>Canceling a paid direct-UPI order does not automatically refund the customer; the owner handles that outside FruitHub.</li>
+    </ul>
+
+    <h2>10. Automated checks</h2>
+    <p>The backend test fixture sets its own database target to port <code>5433</code> and database <code>fruithub_test</code>, then drops/recreates test tables and truncates test data. Ensure that test database exists and is disposable before running tests.</p>
+    <p>Because the virtual environment is at the parent <code>app</code> directory, run:</p>
+    <pre>Set-Location 'C:\Users\HP\OneDrive\Attachments\app\fruithub'
+& 'C:\Users\HP\OneDrive\Attachments\app\.venv\Scripts\python.exe' -m pytest backend\tests -q</pre>
+    <p>Expected from the last run: <strong>84 passed</strong>. A changed test count or failure should be investigated; do not treat the old result as proof that your current environment passed.</p>
+    <p>Frontend syntax checks (run in PowerShell):</p>
+    <pre>node --check 'C:\Users\HP\OneDrive\Attachments\app\fruithub\frontend\js\pages\cart.js'
+node --check 'C:\Users\HP\OneDrive\Attachments\app\fruithub\frontend\js\pages\orders.js'
+node --check 'C:\Users\HP\OneDrive\Attachments\app\fruithub\frontend\js\pages\owner.js'
+node --check 'C:\Users\HP\OneDrive\Attachments\app\fruithub\frontend\js\pages\product.js'
+node --check 'C:\Users\HP\OneDrive\Attachments\app\fruithub\frontend\js\3d\FruitModel.js'</pre>
+
+    <h2>11. What has not been verified</h2>
+    <ul>
+      <li>The Alembic migration has only been checked/rendered offline; it has not been applied to your database.</li>
+      <li>No real PhonePe, Google Pay, or Paytm transfer has been made or automatically verified.</li>
+      <li>The UPI app chooser must be tested on a phone with UPI apps installed; a desktop browser cannot prove that handoff.</li>
+      <li>SMS verification in development prints the OTP in the backend terminal; a production SMS provider has not been configured here.</li>
+      <li>The local backend/API and frontend must both be running for a complete browser test.</li>
+    </ul>
+
+    <h2>12. Copy-ready request for a guided test</h2>
+    <pre>Help me test FruitHub locally at C:\Users\HP\OneDrive\Attachments\app\fruithub, one step at a time, using only my local/test database and test accounts. First check the backend health and explain exactly how to start the backend and frontend. Before any migration, show me how to confirm the target database and back it up; do not run an upgrade unless I confirm the target and backup. Then guide me through owner login, saving the owner’s UPI ID, preparing fruit/juice/dry-fruit products, generating and viewing a product animation, and customer login/phone verification. Have me test an address inside and outside the seller’s delivery area, place an order, open the UPI link on a phone if available, return to My orders, submit a transaction reference, and have the owner verify it against their own UPI account before marking it paid. Check owner order status and delivery restrictions. Explain what should happen after each step and wait for my result before moving to the next. Never use fake proof of payment for a real order, never expose credentials, and clearly mark anything not tested. Direct UPI references are not proof of payment; the owner must independently verify the credit.</pre>
+  </main>
+  <footer>FruitHub local testing guide · Verify database target and backup before migrations.</footer>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Your cart | FruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/shop.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="page">
+    <h1 class="page-title d">Your cart</h1>
+    <p class="page-sub">Each item shows its generated animated preview when the owner has created one; otherwise, you see the product photo. Open a product page for the interactive depth preview. Pay the store directly with PhonePe, Google Pay, Paytm, or another UPI app; the store verifies the transfer.</p>
+    <div id="cart-items"></div>
+    <section class="checkout-box" id="checkout-box" hidden>
+      <h2 class="sec">Delivery address</h2>
+      <label class="sel">Saved address
+        <select id="address-select"></select>
+      </label>
+      <p id="address-delivery" class="text" aria-live="polite"></p>
+      <label class="check external-ack" id="external-ack-wrap" hidden>
+        <input type="checkbox" id="external-ack">
+        I understand the seller cannot deliver to this address. I will arrange and pay for delivery separately.
+      </label>
+      <form id="new-address-form" class="address-form" hidden>
+        <h3>Add a complete address</h3>
+        <label class="field"><span>Address label</span><input name="label" value="Home" required></label>
+        <label class="field"><span>Street address</span><input name="line1" minlength="3" required></label>
+        <label class="field"><span>City</span><input name="city" minlength="2" required></label>
+        <label class="field"><span>6-digit pincode</span><input name="pincode" pattern="[0-9]{6}" required></label>
+        <label class="field"><span>Latitude</span><input name="latitude" type="number" step="any" min="-90" max="90" required></label>
+        <label class="field"><span>Longitude</span><input name="longitude" type="number" step="any" min="-180" max="180" required></label>
+        <button class="btn" type="submit">Save address</button>
+      </form>
+      <button class="btn" id="show-address-form" type="button">Add another address</button>
+      <div class="cart-total" id="cart-total"></div>
+      <button class="btn solid" id="place-order" type="button" disabled>Pay for products</button>
+      <p class="text" id="checkout-message" role="status"></p>
+      <section class="upi-payment" id="upi-payment" hidden>
+        <h2>Pay the store by UPI</h2>
+        <p>Pay <b id="upi-amount"></b> directly to <b id="upi-payee"></b>.</p>
+        <p>UPI ID: <code id="upi-vpa"></code> <button class="btn small" id="copy-upi" type="button">Copy UPI ID</button></p>
+        <a class="btn solid" id="upi-launch" href="#" rel="noopener">Open PhonePe, Google Pay, Paytm or another UPI app</a>
+        <p class="text">On a phone, your device opens an installed app that supports UPI links. If no app opens, copy the UPI ID and amount, then pay from your UPI app manually.</p>
+        <p class="text">After paying, enter the transaction reference shown by your UPI app. Your order remains unpaid until the store verifies the transfer.</p>
+        <form id="upi-reference-form" class="address-form">
+          <label class="field"><span>UPI transaction reference / UTR</span>
+            <input name="transaction_reference" minlength="6" maxlength="50" pattern="[A-Za-z0-9/-]+" required>
+          </label>
+          <button class="btn" type="submit">Submit reference for verification</button>
+        </form>
+      </section>
+      <a class="btn" id="orders-link" href="orders.html" hidden>View my orders</a>
+    </section>
+  </main>
+  <script type="module" src="../js/pages/cart.js"></script>
+</body>
+</html>

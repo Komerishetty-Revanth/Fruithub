@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FruitHub security guide</title>
+  <style>
+    :root { font: 15px/1.65 "Segoe UI", Arial, sans-serif; color: #202820; background: #edf2ee; }
+    * { box-sizing: border-box; }
+    body { max-width: 940px; margin: 28px auto; padding: 0 20px 40px; }
+    header { background: #183b2b; color: white; padding: 30px 36px; border-radius: 16px; }
+    header h1 { margin: 0 0 7px; }
+    header p { margin: 0; color: #d7e6dc; }
+    main { background: white; padding: 28px 36px; border-radius: 16px; margin-top: 16px; }
+    h2 { color: #1b5b3c; font-size: 21px; border-bottom: 1px solid #dce6df; padding-bottom: 5px; margin-top: 28px; }
+    h3 { margin: 18px 0 5px; font-size: 17px; }
+    li { margin: 5px 0; }
+    code, pre { font-family: Consolas, "Courier New", monospace; }
+    code { background: #edf2ee; padding: 1px 4px; overflow-wrap: anywhere; }
+    pre { color: #f3f5f3; background: #17211b; white-space: pre-wrap; overflow-wrap: anywhere; padding: 13px 16px; border-radius: 9px; font-size: 12px; }
+    .notice { border-left: 4px solid #bd3e35; background: #fff0ed; padding: 12px 15px; margin: 16px 0; }
+    .good { border-color: #27804f; background: #edf8f0; }
+    a { color: #17663e; }
+    @media print { :root { background: white; font-size: 11pt; } body { margin: 0; padding: 0; } header, main { border-radius: 0; margin: 0; padding: 18px 28px; } pre, .notice { break-inside: avoid; } a { color: inherit; } }
+  </style>
+</head>
+<body>
+  <header><h1>FruitHub Security Guide</h1><p>Current protections, their limits, and the configuration required before public launch.</p></header>
+  <main>
+    <p><a href="index.html">← Documentation home</a> · <a href="owner-guide.html">Owner handbook</a> · <a href="payments.html">Payment safety</a></p>
+    <div class="notice"><strong>Honest scope:</strong> this explains protections visible in the current application code. It is not a security certification or a guarantee that deployment infrastructure is secure. Before production, have the deployed system reviewed and configure secrets, HTTPS, database access, backups, and production SMS correctly.</div>
+
+    <h2>1. Accounts, passwords, and sessions</h2>
+    <ul>
+      <li>Passwords are hashed using Argon2 through the application’s password hasher. The stored password is not the original password.</li>
+      <li>Login returns a signed JWT that expires based on <code>ACCESS_TOKEN_EXPIRE_MINUTES</code> (default: 60 minutes).</li>
+      <li>API requests use a bearer token; backend dependencies decode the token, load the active account, and check the required role.</li>
+      <li>Customer, owner, and admin APIs have role checks. Public registration creates a customer account; owners are provisioned by an admin.</li>
+      <li>Login uses a generic incorrect-email-or-password message to avoid revealing which part was wrong.</li>
+    </ul>
+    <div class="notice">The frontend saves the access token in browser <code>localStorage</code>. This is convenient, but a successful cross-site scripting (XSS) attack could expose it. This project has not been documented as using an HttpOnly-cookie session. Use HTTPS, keep scripts/dependencies controlled, avoid shared/public computers, and sign out on devices you do not control.</div>
+
+    <h2>2. Role and ownership boundaries</h2>
+    <ul>
+      <li>Owners’ product queries filter by the owner’s store. Owners should not be able to edit another owner’s products.</li>
+      <li>Owner order/payment operations filter by the owner’s store. Owner verification should not reach another store’s payment.</li>
+      <li>Customer order lookups filter by the authenticated customer, preventing one customer from accessing another customer’s order through the API.</li>
+      <li>These are server-side checks; hiding a button in the frontend is not considered authorization.</li>
+    </ul>
+
+    <h2>3. Phone verification and OTP safety</h2>
+    <ul>
+      <li>OTP codes are randomly generated, expire, and are stored as HMAC hashes using the application secret rather than as plain codes.</li>
+      <li>Old codes are consumed when a new code is sent. Resend and per-hour limits, expiry, and a maximum number of attempts are enforced.</li>
+      <li>Development defaults are not production-safe: <code>OTP_DEV_MODE=true</code> can return the OTP in the API response, and the console SMS provider prints it in the backend terminal.</li>
+      <li>No production SMS provider is configured in this project. Do not make real users rely on console output.</li>
+    </ul>
+
+    <h2>4. Input, upload, and storage protections</h2>
+    <ul>
+      <li>Request schemas validate types, lengths, ranges, and formats for important fields such as phone, password, prices, and UPI transaction references.</li>
+      <li>Image uploads are owner-authorized, limited by size (default 5 MB), accepted only for JPEG/PNG/WEBP, decoded as real images, and dimension-limited to help resist malformed or oversized image files.</li>
+      <li>Uploaded images are stored under generated names rather than the user-supplied filename. Local storage resolves paths and rejects keys that escape the configured uploads directory.</li>
+      <li>Database calls use SQLAlchemy query expressions/parameters rather than building queries by concatenating user text.</li>
+    </ul>
+
+    <h2>5. Request protections and response headers</h2>
+    <ul>
+      <li>Login, registration, and OTP endpoints have rate limits in the application.</li>
+      <li>CORS is configured from <code>CORS_ORIGINS</code>; production should list only the real frontend origin(s), not broad untrusted origins.</li>
+      <li>The backend adds <code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options: DENY</code>, and <code>Referrer-Policy: same-origin</code>.</li>
+      <li>These headers and CORS do not replace HTTPS, a reverse proxy’s secure configuration, a content-security policy, or broader production hardening.</li>
+    </ul>
+
+    <h2>6. Required production configuration</h2>
+    <ol>
+      <li>Set a long, randomly generated <code>SECRET_KEY</code> in the deployment secret manager. Never commit it, send it in chat, or reuse the development/test secret.</li>
+      <li>Set <code>OTP_DEV_MODE=false</code>. Configure a real SMS provider only after choosing it and obtaining its credentials; store credentials in environment secrets, not source files.</li>
+      <li>Use HTTPS for the website and API. Restrict CORS to the exact deployed frontend origins.</li>
+      <li>Use a production database account with only required permissions. Keep connection strings secret. Back up the database and test restore procedures.</li>
+      <li>Protect the uploads directory/storage, restrict server access, and consider durable object storage for multi-instance production deployments.</li>
+      <li>Review production logging and monitoring so that passwords, access tokens, OTPs, payment references, and secret values are not exposed unnecessarily.</li>
+      <li>Test rate limits, account recovery, order ownership, owner-store authorization, and payment paths on the actual deployment.</li>
+    </ol>
+    <pre># Development settings are in backend\.env. Do not copy development values into production.
+# Keep secret values private; this example intentionally contains no actual secrets.
+SECRET_KEY=&lt;generate-a-long-random-secret-in-your-secret-manager&gt;
+OTP_DEV_MODE=false
+SMS_PROVIDER=&lt;only-after-a-real-provider-is-implemented-and-configured&gt;
+CORS_ORIGINS=https://your-real-storefront.example</pre>
+
+    <h2>7. Security items not to overclaim</h2>
+    <ul>
+      <li>Direct UPI is not a verified gateway integration. A submitted UTR is user-provided text until the owner checks their bank/UPI account.</li>
+      <li>The configured payment provider in the current app defaults to a mock provider. Mock payment is only suitable for development/testing.</li>
+      <li>There is no configured production SMS provider, automated payment webhook, payment dispute service, or automatic direct-UPI refund.</li>
+      <li>Alembic migrations have to be applied safely to the intended database after a verified backup; generating SQL offline does not migrate a database.</li>
+      <li>Passing tests checks covered behavior, not every vulnerability or production infrastructure setting.</li>
+    </ul>
+    <p>For the local setup steps, see <a href="FruitHub-Local-Test-Guide.html">Local test guide</a>. For verification and owner responsibilities, see <a href="payments.html">Payments &amp; UPI safety</a>.</p>
+  </main>
+</body>
+</html>

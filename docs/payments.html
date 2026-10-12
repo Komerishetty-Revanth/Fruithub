@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FruitHub payments and UPI safety</title>
+  <style>
+    :root { font: 15px/1.65 "Segoe UI", Arial, sans-serif; color: #202820; background: #edf2ee; }
+    * { box-sizing: border-box; }
+    body { max-width: 940px; margin: 28px auto; padding: 0 20px 40px; }
+    header { background: #183b2b; color: white; padding: 30px 36px; border-radius: 16px; }
+    header h1 { margin: 0 0 7px; }
+    header p { margin: 0; color: #d7e6dc; }
+    main { background: white; padding: 28px 36px; border-radius: 16px; margin-top: 16px; }
+    h2 { color: #1b5b3c; font-size: 21px; border-bottom: 1px solid #dce6df; padding-bottom: 5px; margin-top: 28px; }
+    li { margin: 5px 0; }
+    code { background: #edf2ee; padding: 1px 4px; overflow-wrap: anywhere; }
+    .notice { border-left: 4px solid #bd3e35; background: #fff0ed; padding: 12px 15px; margin: 16px 0; }
+    .good { border-color: #27804f; background: #edf8f0; }
+    a { color: #17663e; }
+    @media print { :root { background: white; font-size: 11pt; } body { margin: 0; padding: 0; } header, main { border-radius: 0; margin: 0; padding: 18px 28px; } .notice { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <header><h1>FruitHub Payments &amp; UPI Safety</h1><p>What the app does, what it does not do, and how customers and owners should verify payment.</p></header>
+  <main>
+    <p><a href="index.html">← Documentation home</a> · <a href="security.html">Security guide</a> · <a href="owner-guide.html">Owner handbook</a></p>
+    <div class="notice"><strong>Read first:</strong> direct UPI sends money from the customer to the store’s UPI account. FruitHub does not receive the bank’s payment result. A transaction reference entered by a customer does not prove payment.</div>
+
+    <h2>1. What happens when a customer checks out</h2>
+    <ol>
+      <li>The backend checks the logged-in customer, verified phone, address, store status, cart contents, stock, and seller delivery area.</li>
+      <li>If the selected address is outside the seller’s service area, the customer must accept that they will arrange and pay for delivery separately. That external delivery cost is not charged by FruitHub or included in its order total.</li>
+      <li>The backend creates an order with payment status pending and reserves stock. If the order uses manual UPI, the backend reads the owner’s store UPI ID.</li>
+      <li>The checkout presents a standard <code>upi://pay</code> intent including payee/UPI ID, product order amount, currency, and order reference.</li>
+      <li>The customer’s phone may offer an installed compatible app such as PhonePe, Google Pay, Paytm, or another UPI app. Which apps appear is controlled by the device/browser and installed applications.</li>
+      <li>If app handoff does not work, the customer can copy the UPI ID and open their app manually. They must confirm that the payee and amount match before approving the payment.</li>
+      <li>The customer returns to FruitHub and submits the UPI transaction reference/UTR. The order remains pending and unpaid at this point.</li>
+      <li>The owner compares the exact amount/reference with the credited transaction visible in their own UPI/bank account. Only then should the owner select <strong>Confirm money received</strong>.</li>
+    </ol>
+
+    <h2>2. Who controls which part</h2>
+    <ul>
+      <li><strong>Customer:</strong> initiates payment in a UPI app and reports the app’s reference. The customer cannot mark their order paid by submitting a reference.</li>
+      <li><strong>Owner:</strong> configures the store’s UPI ID, checks actual received funds, and confirms or rejects a submitted reference.</li>
+      <li><strong>FruitHub backend:</strong> stores a pending payment, generates the UPI URI, records customer-submitted reference text, enforces owner/store authorization, and changes payment/order state only after an authorized owner action.</li>
+      <li><strong>UPI/bank app:</strong> authorizes and executes the transfer. This app does not currently send FruitHub a verified payment callback.</li>
+    </ul>
+
+    <h2>3. Helpful safeguards in the current code</h2>
+    <ul>
+      <li>Checkout rejects manual-UPI orders if the store has not configured a UPI ID.</li>
+      <li>Customers can submit a reference only for their own pending manual-UPI order. Repeated submission of the same reference to the same order is idempotent; a different second reference is rejected.</li>
+      <li>Owners can see submitted references only for their own store. Another owner cannot confirm them.</li>
+      <li>The order stays pending/unpaid until an owner confirms. Rejection marks the payment failed, cancels the order, and restores stock.</li>
+      <li>Orders waiting for payment expire after the configured initial payment window (default 15 minutes). Once a UPI reference has been submitted, the pending verification window is up to 24 hours, after which an unverified order expires and stock is released.</li>
+      <li>Direct UPI does not support an automatic in-app refund. If a paid order is later cancelled, the owner must arrange any refund outside FruitHub and communicate with the customer.</li>
+    </ul>
+
+    <h2>4. Customer payment checklist</h2>
+    <ol>
+      <li>Check the order amount in FruitHub.</li>
+      <li>Check the UPI ID/payee shown by FruitHub against the payee shown by PhonePe, Google Pay, Paytm, or the other app.</li>
+      <li>Confirm the amount and payee in the UPI app before authorizing.</li>
+      <li>After payment, record the transaction reference from the UPI app, return to FruitHub → My orders, and submit it once.</li>
+      <li>Wait for the owner’s confirmation. Do not assume the order is paid just because the app displayed success or the reference was submitted; check the FruitHub order status and contact the store if needed.</li>
+      <li>Never send a UPI PIN, password, OTP, or full card/bank credentials to the store or FruitHub.</li>
+    </ol>
+    <div class="notice good">If the UPI app does not launch from a desktop, that is expected: UPI app handoff is intended for a compatible phone. Use the copy-UPI-ID fallback or test the app chooser on a phone where the UPI apps are installed.</div>
+
+    <h2>5. Owner payment checklist</h2>
+    <ol>
+      <li>In Owner panel, set the correct UPI ID/VPA for the account where store proceeds should arrive.</li>
+      <li>Never share the owner’s UPI PIN or sign-in/OTP details with a customer.</li>
+      <li>For each submitted reference, open the owner’s trusted UPI/bank app separately. Verify that money is actually credited to the store account.</li>
+      <li>Match amount, date/time, reference, and recipient account. A screenshot or customer-provided UTR alone is not enough.</li>
+      <li>Confirm only after the credit is visible. If it is not visible, keep pending until resolved or reject according to store policy.</li>
+      <li>If rejecting, remember that the order is cancelled and stock returns. If funds actually arrived but the order cannot be fulfilled, the owner must make any refund outside FruitHub and tell the customer.</li>
+    </ol>
+
+    <h2>6. Test safely</h2>
+    <ul>
+      <li>Use the project’s test database and test accounts. The test fixture clears its selected test database, so ensure it is disposable.</li>
+      <li>For a real phone-app handoff test, use a UPI test setup if available, or an agreed small real amount with the account owner. A real UPI transaction moves real money.</li>
+      <li>Do not type fake references into an order for a real store or click Confirm without actually checking the account.</li>
+      <li>Verify an inside-radius and outside-radius address separately. External delivery is arranged and paid separately by the customer.</li>
+    </ul>
+
+    <h2>7. Not implemented / not guaranteed</h2>
+    <ul>
+      <li>No PhonePe/Google Pay/Paytm SDK or app-specific integration. The app uses the standard UPI URI handoff.</li>
+      <li>No automatic verified callback, reconciliation, escrow, marketplace split settlement, dispute handling, or automatic UPI refund.</li>
+      <li>The mock payment provider is a development/testing tool and does not transfer money. Do not use mock payments as a production payment setup.</li>
+      <li>Owner confirmation is a manual action and is only as reliable as the owner’s independent verification.</li>
+    </ul>
+    <p>For owner controls and product workflows see the <a href="owner-guide.html">Owner handbook</a>. For local commands, see the <a href="FruitHub-Local-Test-Guide.html">Local test guide</a>.</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Shop | FruitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/shop.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="page">
+    <h1 class="page-title d" id="page-title">Shop fresh products</h1>
+    <p class="page-sub" id="page-sub">Fresh products from local sellers. Delivery options are confirmed at checkout.</p>
+
+    <div class="search"><input id="search" type="search" placeholder="Search fruits, juices, and dry fruits..." aria-label="Search products" autocomplete="off"></div>
+    <div class="chips" id="type-chips" role="tablist" aria-label="Product types"></div>
+    <div class="chips" id="chips" role="tablist" aria-label="Categories"></div>
+
+    <div class="filters">
+      <label class="sel"><span>Sort</span>
+        <select id="sort">
+          <option value="name">Name</option>
+          <option value="price_asc">Price: low to high</option>
+          <option value="price_desc">Price: high to low</option>
+          <option value="rating">Best rated</option>
+          <option value="newest">Newest</option>
+        </select>
+      </label>
+      <label class="sel"><span>Price</span>
+        <select id="max_price">
+          <option value="">Any</option>
+          <option value="60">Up to ₹60</option>
+          <option value="100">Up to ₹100</option>
+          <option value="150">Up to ₹150</option>
+          <option value="250">Up to ₹250</option>
+        </select>
+      </label>
+      <label class="sel"><span>Rating</span>
+        <select id="min_rating">
+          <option value="">Any</option>
+          <option value="3">3 stars and up</option>
+          <option value="4">4 stars and up</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="available"> In stock</label>
+      <label class="check"><input type="checkbox" id="has_offer"> On offer</label>
+      <button class="link-btn" id="reset" type="button">Clear filters</button>
+    </div>
+
+    <p class="count" id="count" aria-live="polite"></p>
+    <div class="pgrid" id="grid"></div>
+    <div class="pager" id="pager"></div>
+  </main>
+  <script type="module" src="../js/pages/products.js"></script>
+</body>
+</html>
