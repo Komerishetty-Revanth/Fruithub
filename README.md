@@ -1,5 +1,5 @@
 FRUITHUB
-Fresh. Local. Within 5 KM.
+Fresh Local
 
 A premium 3D marketplace for fruits, juices and dry fruits. Customers order from stores within 5 km. Store owners manage products, stock, offers and orders. An admin approves stores and oversees the platform.
 
